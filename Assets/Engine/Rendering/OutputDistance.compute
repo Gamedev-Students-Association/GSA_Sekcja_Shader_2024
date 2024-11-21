@@ -1,0 +1,50 @@
+#pragma kernel vol
+
+//input position for distance shaders
+RWTexture2D<float4> Pos;
+
+// color buffer (end result color visible on the screen)
+RWTexture2D<float4> Col;
+
+Texture2D<float> Dist;
+
+[numthreads(8,8,1)]
+void vol (uint3 id : SV_DispatchThreadID)
+{
+    //specifically uses distance as input
+    float dist = Dist[id.xy];
+    float4 col = float4(1, 1, 1, 1);
+    if (dist <= 1 && dist >= 0) //near 0 mark as red
+    {
+        col.y = dist;
+        col.z = dist;
+    }
+    else if (dist > 0) //repeting positive mark as blue
+    {
+        //sharp
+        dist %= 1;
+        col.x = dist;
+        col.y = dist;
+        //smooth
+        /*
+        dist *= 2;
+        dist %= 2;
+        if (dist > 1)
+        {
+            dist = 2 - dist;
+        }
+        col.x = dist;
+        col.y = dist;
+        */
+    }
+    else if (dist < 0) //repeting negative mark as black
+    {
+        dist = abs(dist);
+        dist %= 1;
+        col.x = dist;
+        col.y = dist;
+        col.z = dist;
+    }
+
+    Col[id.xy] = col;
+}

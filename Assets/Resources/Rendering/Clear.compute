@@ -1,0 +1,23 @@
+#pragma kernel ClearAll
+
+//just hold all engine core buffers/textures
+RWTexture2D<float> Dist;
+RWTexture2D<float> ResDist;
+RWTexture2D<float4> Pos;
+RWTexture2D<float4> CameraPos;
+RWTexture2D<float4> Col;
+RWTexture2D<float4> ResCol;
+
+
+[numthreads(8,8,1)]
+void ClearAll (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    float distThreshold = 16384; //some high value to start comparing distance
+    Dist[id.xy] = distThreshold;
+    ResDist[id.xy] = distThreshold;
+    Pos[id.xy] = float4(0, 0, 0, 0);
+    CameraPos[id.xy] = float4(0, 0, 0, 0);
+    Col[id.xy] = float4(1, 1, 1, 0); 
+    ResCol[id.xy] = float4(1, 1, 1, 0); //yes basic debug background is fully transparent
+}

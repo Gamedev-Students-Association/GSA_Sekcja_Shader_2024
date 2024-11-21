@@ -1,0 +1,7 @@
+
+
+meele weapons:
+meele weapons do in fact spawn projectiles! (they are just static proj)
+
+so a sword swing is just a projectile that is a child of spawner,
+has 0 speed, nearly 0 lifetime and hits only once

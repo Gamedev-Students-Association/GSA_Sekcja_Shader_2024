@@ -1,0 +1,39 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Plane2D
+#pragma kernel Raymarch3D
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Pos;
+
+//camera resolution (must be passed separately)
+vector Resolution;
+//camera frustum
+vector Frustum[4];
+//additional camera depth
+float bonusDepth; //currently unimplemented
+
+float3 CalcPixelWorldPos(float2 screenPos)
+{
+    //create 2 directional vectors (one up one right)
+    float3 upDir = Frustum[2] - Frustum[0];
+    float3 rightDir = Frustum[1] - Frustum[0];
+    //we can safetly add those 2 vectors as long as the are perpendicular (they always schould be)
+    return Frustum[0] + rightDir * screenPos.x + upDir * screenPos.y;
+}
+
+//defines pos per pixel to match camera world space frustum (single 2d plane)
+[numthreads(8,8,1)]
+void Plane2D (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(id.x / Resolution.x, id.y / Resolution.y);
+    //old camera calc function, currently swithing for better one
+    Pos[id.xy] = float4(CalcPixelWorldPos(uv), 0);
+}
+
+//prepares pos from camera frustum to be used in raymarching
+[numthreads(8, 8, 1)]
+void Raymarch3D (uint3 id : SV_DispatchThreadID)
+{
+
+}

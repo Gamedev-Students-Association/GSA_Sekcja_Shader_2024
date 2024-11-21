@@ -1,0 +1,17 @@
+#pragma kernel vol
+
+//input position
+Texture2D<float4> Pos;
+
+// color buffer (end result color visible on the screen)
+RWTexture2D<float4> Col;
+
+uniform vector MainCol; //color
+
+//volume shader, defines finite color based on sampling position in 3d space
+[numthreads(8, 8, 1)]
+void vol(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    Col[id.xy] = MainCol;
+}

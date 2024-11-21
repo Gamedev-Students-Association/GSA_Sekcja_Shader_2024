@@ -1,0 +1,62 @@
+#pragma kernel add
+#pragma kernel subtract
+#pragma kernel intersect
+#pragma kernel smoothadd
+
+#include "Assets/Engine/Rendering/Libraries/ConnectingCalculations.cginc"
+
+//input distance (newly added object)
+//outputting distance is for mapping volumes
+RWTexture2D<float> Dist;
+
+//result distance (past scene distance at input)
+RWTexture2D<float> ResDist;
+
+//for smoothAdd etc.
+uniform float Factor;
+
+//distance shader, defines geometry based on sampling point in 3d space
+//(return values < 0 means inside geometry)
+[numthreads(8, 8, 1)]
+void add(uint3 id : SV_DispatchThreadID)
+{
+    //dist = dist;
+    ResDist[id.xy] = Add(ResDist[id.xy], Dist[id.xy]);
+}
+
+[numthreads(8, 8, 1)]
+void subtract(uint3 id : SV_DispatchThreadID)
+{
+    float result = Subtract(ResDist[id.xy], Dist[id.xy]);
+    /*
+    if (ResDist[id.xy] <= 0) //fill interior of other object, but not whole space
+    {
+        Dist[id.xy] = -Dist[id.xy];
+    }
+    else
+    {
+        Dist[id.xy] = result;
+    }
+    ResDist[id.xy] = result;
+    */
+    ResDist[id.xy] = result;
+}
+
+[numthreads(8, 8, 1)]
+void intersect(uint3 id : SV_DispatchThreadID)
+{
+    float result = Intersect(ResDist[id.xy], Dist[id.xy]);
+    //Dist[id.xy] = result;
+    ResDist[id.xy] = result;
+}
+
+[numthreads(8, 8, 1)]
+void smoothadd(uint3 id : SV_DispatchThreadID)
+{
+    float result = SmoothAdd(ResDist[id.xy], Dist[id.xy], Factor);
+    if (ResDist[id.xy] <= 0 && Dist[id.xy] > 0) //fill mid section with volume, but not other object
+    {
+        Dist[id.xy] = 1;
+    }
+    ResDist[id.xy] = result;
+}

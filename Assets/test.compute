@@ -1,0 +1,31 @@
+#pragma kernel dist
+#pragma kernel vol
+
+//input position
+Texture2D<float4> Pos;
+
+// distance buffer (simmilar to depth buffer) defines geometry
+RWTexture2D<float> Dist;
+
+// color buffer (end result color visible on the screen)
+RWTexture2D<float4> Col;
+
+uniform vector asds; //color
+uniform float twojaStara[2];
+
+//distance shader, defines geometry based on sampling point in 3d space
+//(return values < 0 means inside geometry)
+[numthreads(8, 8, 1)]
+void dist(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    Dist[id.xy] = length(Pos[id.xy]);
+}
+
+//volume shader, defines finite color based on sampling position in 3d space
+[numthreads(8, 8, 1)]
+void vol(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    Col[id.xy] = float4(1, 0, 1, 1);
+}

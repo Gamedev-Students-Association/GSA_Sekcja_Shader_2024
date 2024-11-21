@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b5f18178db0304db813993c7f489a0, type: 3}
+  m_Name: Cylinder
+  m_EditorClassIdentifier: 
+  shader: {fileID: 7200000, guid: 551665d2254911845a8fcff58eb291f3, type: 3}
+  shaderType: 1
+  kernelNames:
+  - dist
+  kernelIDs: 00000000

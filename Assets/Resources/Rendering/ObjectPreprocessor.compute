@@ -1,0 +1,29 @@
+#pragma kernel LocalSpaceTransform
+
+#include "Assets/Engine/Rendering/Libraries/UsefulCalculations.cginc"
+
+//input pos texture from camera
+Texture2D<float4> Pos;
+//returned position
+RWTexture2D<float4> ResPos;
+
+//object data
+vector Position;
+vector Rotation;
+vector Scale;
+
+[numthreads(8,8,1)]
+void LocalSpaceTransform (uint3 id : SV_DispatchThreadID)
+{
+    float3 localPos = float3(Pos[id.xy].x, Pos[id.xy].y, Pos[id.xy].z);
+    //translation
+    localPos -= Position.xyz;
+    //rotation
+    localPos = Rotate3D(localPos, Rotation.xyz);
+    //scalling
+    localPos /= Scale;
+    //!!! Note that scalling requires operation AFTER the object is calculated
+    //so it must be placed in another shader
+
+    ResPos[id.xy] = float4(localPos.x, localPos.y, localPos.z, 0.0);
+}

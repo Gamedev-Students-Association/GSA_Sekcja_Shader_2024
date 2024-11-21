@@ -1,0 +1,126 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel RayMarching2D
+
+#include "RaymarchingLibrary.cginc"
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+//UNIFORMS
+
+//neeeded for UV calc
+vector Resolution;
+//number of objects in a scene
+int ObjectsCap;
+
+//camera
+vector CameraPosition;
+vector CameraScale;
+float CameraRotation;
+
+vector Frustum[4];
+
+vector ShapePosition[100];
+vector ShapeRotation[100]; //currently unused
+vector ShapeScale[100];
+
+int ShapeType[100];
+int ConnectType[100];
+float ConnectFactor[100];
+int TextureType[100];
+vector TextureColor[100];
+vector TextureScale[100];
+
+
+//Depricated!!!
+float3 CalcCameraPos(float2 screenPos)
+{
+    float3 res = float3(0, 0, 0);
+    //float3 res = float3(CameraPosition.x, CameraPosition.y, CameraPosition.z);
+    //camera field of view
+    res = float3(res.x + CameraScale.x * screenPos.x, res.y + CameraScale.y * screenPos.y, res.z + CameraScale.z);
+    //rotating
+    res = Rotate3D(res, float3(0, -CameraRotation, 0));
+
+    res += CameraPosition.xyz;
+
+    return res;
+}
+
+float3 CalcPixelWorldPos(float2 screenPos)
+{
+    //create 2 directional vectors (one up one right)
+    float3 upDir = Frustum[2] - Frustum[0];
+    float3 rightDir = Frustum[1] - Frustum[0];
+    //we can safetly add those 2 vectors as long as the are perpendicular (they always schould be)
+    return Frustum[0] + rightDir * screenPos.x + upDir * screenPos.y;
+}
+
+float SignedDistanceField(float3 pos, inout int HitObject)
+{
+    float resultDist = 1;
+    float finalDist = 1000;
+
+    HitObject = -1; //no object hitted
+
+    for (int i = 0; i < ObjectsCap; i++)
+    {
+        float3 localOr = pos - ShapePosition[i].xyz;
+        localOr = Rotate3D(localOr, float3(ShapeRotation[i].x, ShapeRotation[i].y, ShapeRotation[i].z));
+
+        //shape calc
+        resultDist = SingleShape(localOr, ShapeScale[i], ShapeType[i]);
+        
+        //no need for rescalling
+        //resultDist *= min(ShapeScale[i].x, min(ShapeScale[i].y, ShapeScale[i].z));
+
+
+        float distMeter = finalDist;
+
+        finalDist = SingleConnection(finalDist, resultDist, ConnectType[i], ConnectFactor[i]);
+
+        if (distMeter != finalDist)
+        {
+            HitObject = i;
+        }
+    }
+    return finalDist;
+}
+
+float4 TexMarching(float3 p, int index)
+{
+    float4 res = float4(0, 0, 0, 0);
+    res = SingleTex(p, TextureScale[index], TextureColor[index], TextureType[index]);
+
+    //makes it always opaque
+    res.w = 1;
+    return res;
+}
+
+[numthreads(8,8,1)]
+void RayMarching2D(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(id.x / Resolution.x, id.y / Resolution.y);
+    //old camera calc function, currently swithing for better one
+    float3 pos = CalcPixelWorldPos(uv);
+    int HitObject = -1;
+    float dist = SignedDistanceField(pos, HitObject);
+
+
+    //debugging
+    //Result[id.xy] = float4(pos.xy, 0, 0);
+    //*
+
+    if (dist < 0)
+    {
+        Result[id.xy] = TexMarching(pos, HitObject);
+    }
+    else
+    {
+        Result[id.xy] = float4(1, 1, 1, 0);
+    }
+    //*/
+    //Result[id.xy] = dist;
+    //Result[id.xy] = float4(pos.xy, 0, 0);
+}

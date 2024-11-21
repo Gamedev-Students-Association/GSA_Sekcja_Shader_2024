@@ -1,0 +1,17 @@
+#pragma kernel dist
+
+#include "Assets/Engine/Rendering/Libraries/ShapesCalculations.cginc"
+
+//input position
+Texture2D<float4> Pos;
+
+// distance buffer (simmilar to depth buffer) defines geometry
+RWTexture2D<float> Dist;
+
+//distance shader, defines geometry based on sampling point in 3d space
+//(return values < 0 means inside geometry)
+[numthreads(8, 8, 1)]
+void dist(uint3 id : SV_DispatchThreadID)
+{
+    Dist[id.xy] = OctahedronShape(Pos[id.xy]);
+}
